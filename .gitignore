@@ -1,3 +1,8 @@
+# Stm32CubeIDE
+Debug/
+Release/
+build/
+
 # Prerequisites
 *.d
 
