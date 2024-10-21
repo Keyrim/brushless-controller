@@ -34,46 +34,12 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 #
 # List of source files to compile
 #
-set(sources_SRCS
-    ${PROJ_PATH}/Core/Src/main.c
-    ${PROJ_PATH}/Core/Src/gpio.c
-    ${PROJ_PATH}/Core/Src/usart.c
-    ${PROJ_PATH}/Core/Src/stm32f3xx_hal_msp.c
-    ${PROJ_PATH}/Core/Src/stm32f3xx_it.c
-    ${PROJ_PATH}/Core/Src/syscalls.c
-    ${PROJ_PATH}/Core/Src/sysmem.c
-    ${PROJ_PATH}/Core/Src/system_stm32f3xx.c
-    ${PROJ_PATH}/Core/Startup/startup_stm32f302r8tx.s
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_exti.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc_ex.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr_ex.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart_ex.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash_ex.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c_ex.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.c
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.c
-)
+set(SRCS_FILE "")
+set(INCLUDE_PATH_DIRS "")
 
-
-#
-# Include directories
-#
-set(include_path_DIRS
-    ${PROJ_PATH}/Core/Inc
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Inc
-    ${PROJ_PATH}/Drivers/STM32F3xx_HAL_Driver/Inc/Legacy
-    ${PROJ_PATH}/Drivers/CMSIS/Device/ST/STM32F3xx/Include
-    ${PROJ_PATH}/Drivers/CMSIS/Include
-)
+include (${PROJ_PATH}/Drivers/CMakeLists.txt)
+include (${PROJ_PATH}/Core/CMakeLists.txt)
+include (${PROJ_PATH}/src/app/CMakeLists.txt)
 
 #
 # Symbols definition
@@ -85,10 +51,10 @@ set(symbols_SYMB
 )
 
 # Executable files
-add_executable(${EXECUTABLE} ${sources_SRCS})
+add_executable(${EXECUTABLE} ${SRCS_FILES})
 
 # Include paths
-target_include_directories(${EXECUTABLE} PRIVATE ${include_path_DIRS})
+target_include_directories(${EXECUTABLE} PRIVATE ${INCLUDE_PATH_DIRS})
 
 # Project symbols
 target_compile_definitions(${EXECUTABLE} PRIVATE ${symbols_SYMB})

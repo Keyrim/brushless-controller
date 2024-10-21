@@ -1,0 +1,13 @@
+set(APP_DIR ${CMAKE_CURRENT_LIST_DIR})
+
+set(INCLUDE_PATH_DIRS
+    ${INCLUDE_PATH_DIRS}
+    ${APP_DIR}
+)
+
+set(SRCS_FILES
+    ${SRCS_FILES}
+    ${APP_DIR}/app_main.c
+)
+
+
