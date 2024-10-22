@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "bsp.h"
+#include "app_main.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,16 +91,15 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  uint8_t* hey = "hey\n";
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  bsp_init();
+  app_main_init();
   while (1)
   {
-	  HAL_UART_Transmit(&huart2, hey, strlen(hey), 100);
-	  HAL_Delay(1000);
+    app_main_loop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

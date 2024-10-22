@@ -37,10 +37,11 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 set(SRCS_FILE "")
 set(INCLUDE_PATH_DIRS "")
 
+include (${PROJ_PATH}/lib/common/CMakeLists.txt)
 include (${PROJ_PATH}/Drivers/CMakeLists.txt)
 include (${PROJ_PATH}/Core/CMakeLists.txt)
 include (${PROJ_PATH}/src/app/CMakeLists.txt)
-
+include (${PROJ_PATH}/src/bsp/CMakeLists.txt)
 #
 # Symbols definition
 #

@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.h": "c"
+    },
+    "clangd.arguments": [
+        "--compile-commands-dir=build/Debug"
+    ]
+}
