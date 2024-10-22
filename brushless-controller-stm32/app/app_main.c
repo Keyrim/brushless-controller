@@ -8,6 +8,9 @@
  * Includes
  ******************************************************************************/
 #include "app_main.h"
+#include "bsp_uart.h"
+#include "stm32f3xx_hal.h"
+#include <stdint.h>
 
 /******************************************************************************
  * PRIVATE Configuration
@@ -63,5 +66,21 @@ void app_main_init(void) {}
  */
 void app_main_loop(void) {
     while (1) {
+        uint8_t received_bytes[128];
+
+        uint8_t* bytes = received_bytes;
+
+        while(UART_bytes_available(UART_2)) {
+            UART_get(UART_2, bytes++);
+        }
+
+        if (bytes != received_bytes) {
+            UART_transmit(UART_2, (uint8_t*)"received the msg: ", 18);
+            UART_transmit(UART_2, received_bytes, bytes - received_bytes);
+            UART_transmit(UART_2, (uint8_t*)"\n", 1);
+        }
+
+        UART_transmit(UART_2, (uint8_t*)"hello world\n", 12);
+        HAL_Delay(1000);
     }
 }

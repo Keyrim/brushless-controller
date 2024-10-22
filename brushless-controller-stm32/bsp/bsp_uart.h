@@ -39,7 +39,7 @@ typedef enum {
  * @brief uart enumeration definition
  */
 typedef enum {
-    UART_1 = 0,
+    UART_2 = 0,
     UART_COUNT,
 } uart_e;
 

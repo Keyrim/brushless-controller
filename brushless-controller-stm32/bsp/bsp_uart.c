@@ -99,7 +99,7 @@ void UART_transfer_complete_cb(uart_e id) {
 
 void UART_init(void) {
     /* Link huarts to the right uarts structures */
-    uart[UART_1].huart = &huart2;
+    uart[UART_2].huart = &huart2;
 
     /* Initialization */
     for (uint8_t u = 0; u < UART_COUNT; u++) {
