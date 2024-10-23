@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD              20)
 set(CMAKE_CXX_STANDARD_REQUIRED     ON)
 set(CMAKE_CXX_EXTENSIONS            ON)
 set(PROJ_PATH                       ${CMAKE_CURRENT_SOURCE_DIR})
+set(PROJ_CONFIG_PATH                ${PROJ_PATH}/config)
 message("Build type: "              ${CMAKE_BUILD_TYPE})
 
 #
@@ -34,10 +35,15 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 #
 # List of source files to compile
 #
-set(SRCS_FILE "")
-set(INCLUDE_PATH_DIRS "")
+set(SRCS_FILE
+    ""
+)
+set(INCLUDE_PATH_DIRS
+    ${PROJ_CONFIG_PATH}
+)
 
 include (${PROJ_PATH}/lib/common/CMakeLists.txt)
+include (${PROJ_PATH}/lib/log/CMakeLists.txt)
 include (${PROJ_PATH}/Drivers/CMakeLists.txt)
 include (${PROJ_PATH}/Core/CMakeLists.txt)
 include (${PROJ_PATH}/app/CMakeLists.txt)

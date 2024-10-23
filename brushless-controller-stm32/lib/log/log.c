@@ -7,15 +7,21 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
-#include <stdint.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "log.h"
-#include "bsp_uart.h"
-#include "app_main.h"
 
 /******************************************************************************
  * PRIVATE Configuration
  ******************************************************************************/
-#define TAG "APP_MAIN"
+
+/**
+ * @brief The size of the log buffer
+ */
+#ifndef LOG_BUFFER_SIZE
+#   define LOG_BUFFER_SIZE 256
+#endif
+
 /******************************************************************************
  * PRIVATE Macro
  ******************************************************************************/
@@ -36,9 +42,16 @@
  * PRIVATE variable definitions
  ******************************************************************************/
 
+/**
+ * @brief Buffer used to store the log message before sending it
+ */
+static char log_buffer[LOG_BUFFER_SIZE];
+
 /******************************************************************************
  * PUBLIC implicit variable definitions (e.g. when no .h file)
  ******************************************************************************/
+
+extern void log_puts(char* str, int len);
 
 /******************************************************************************
  * PRIVATE Callback function
@@ -55,31 +68,11 @@
 /******************************************************************************
  * PUBLIC function
  ******************************************************************************/
-
-/**
- * @brief Initialize the main application
- */
-void app_main_init(void) {}
-
-/**
- * @brief Main application loop
- */
-void app_main_loop(void) {
-    while (1) {
-        uint8_t received_bytes[128];
-
-        uint8_t* bytes = received_bytes;
-
-        while(UART_bytes_available(UART_2)) {
-            UART_get(UART_2, bytes++);
-        }
-        *(bytes) = '\0';
-
-        if (bytes != received_bytes) {
-            logi("received the msg: %s", received_bytes);
-            logd("received the msg: %s", received_bytes);
-            logw("received the msg: %s", received_bytes);
-            loge("received the msg: %s", received_bytes);
-        }
-    }
+void log_msg(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(log_buffer, LOG_BUFFER_SIZE, fmt, args);
+    va_end(args);
+    log_puts(log_buffer, len);
 }

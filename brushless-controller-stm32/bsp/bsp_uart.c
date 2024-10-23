@@ -139,3 +139,7 @@ void UART_get(uart_e id, uint8_t *c) {
         uart[id].index_read_rx = (uart[id].index_read_rx + 1) % LEN_BUFFER;
     }
 }
+
+void log_puts(char* str, int len) {
+    UART_transmit(UART_2, (uint8_t*)str, len);
+}

@@ -1,0 +1,13 @@
+set(LOG_DIR ${CMAKE_CURRENT_LIST_DIR})
+
+set(INCLUDE_PATH_DIRS
+    ${INCLUDE_PATH_DIRS}
+    ${LOG_DIR}
+)
+
+set(SRCS_FILES
+    ${SRCS_FILES}
+    ${LOG_DIR}/log.c
+)
+
+
