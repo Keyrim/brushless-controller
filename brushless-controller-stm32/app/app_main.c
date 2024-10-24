@@ -7,15 +7,17 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
+#define TAG "app_main"
+
 #include <stdint.h>
 #include "log.h"
-#include "bsp_uart.h"
+#include "task_mngr.h"
 #include "app_main.h"
 
 /******************************************************************************
  * PRIVATE Configuration
  ******************************************************************************/
-#define TAG "APP_MAIN"
+
 /******************************************************************************
  * PRIVATE Macro
  ******************************************************************************/
@@ -59,27 +61,16 @@
 /**
  * @brief Initialize the main application
  */
-void app_main_init(void) {}
+void app_main_init(void) {
+    logi("Main application initialized");
+    task_mngr_init();
+}
 
 /**
  * @brief Main application loop
  */
 void app_main_loop(void) {
-    while (1) {
-        uint8_t received_bytes[128];
-
-        uint8_t* bytes = received_bytes;
-
-        while(UART_bytes_available(UART_2)) {
-            UART_get(UART_2, bytes++);
-        }
-        *(bytes) = '\0';
-
-        if (bytes != received_bytes) {
-            logi("received the msg: %s", received_bytes);
-            logd("received the msg: %s", received_bytes);
-            logw("received the msg: %s", received_bytes);
-            loge("received the msg: %s", received_bytes);
-        }
+    for(;;) {
+        task_mngr_main();
     }
 }

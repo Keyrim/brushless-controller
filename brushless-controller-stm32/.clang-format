@@ -7,4 +7,14 @@ Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Right
 ColumnLimit: 80
+ReflowComments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: false
+BinPackParameters: false
+BinPackArguments: false
+AllowShortFunctionsOnASingleLine: false
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
 ...

@@ -1,0 +1,13 @@
+set(TASK_MNGR ${CMAKE_CURRENT_LIST_DIR})
+
+set(INCLUDE_PATH_DIRS
+    ${INCLUDE_PATH_DIRS}
+    ${TASK_MNGR}
+)
+
+set(SRCS_FILES
+    ${SRCS_FILES}
+    ${TASK_MNGR}/task_mngr.c
+)
+
+

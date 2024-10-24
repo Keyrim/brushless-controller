@@ -4,61 +4,42 @@
  * SPDX-License-Identifier: MIT
  */
 
-/**
- * @todo Handle log level (e.g. only log error)
- * @todo Handle module specific log level
- */
-
 /* Protection against multiple inclusions */
-#ifndef __LOG_H__
-#define __LOG_H__ __FILE__
+#ifndef __TASK_MNGR_H__
+#define __TASK_MNGR_H__ __FILE__
 
 /******************************************************************************
  * Includes
  ******************************************************************************/
+#include <stdint.h>
+
+#include "lib_config.h"
 
 /******************************************************************************
  * PUBLIC Configuration
  ******************************************************************************/
+#ifndef TASK_MNGR_MAX_TASK
+#define TASK_MNGR_MAX_TASK 5
+#endif
 
-#define LOG_AINSI_RED "\x1b[1;38;5;196m"
-#define LOG_AINSI_GREEN "\x1b[38;5;46m"
-#define LOG_AINSI_BLUE "\x1b[38;5;33m"
-#define LOG_AINSI_YELLOW "\x1b[38;5;226m"
-#define LOG_AINSI_ORANGE "\x1b[38;5;202m"
-#define LOG_AINSI_RESET "\x1b[0m"
-#define LOG_NEWLINE "\n"
-
-#ifdef TAG
-#define LOG_TAG TAG " "
-#else
-#define LOG_TAG ""
+#ifndef TASK_MNGR_GET_TIME_US_FUNC
+#error "TASK_MNGR_GET_TIME_US_FUNC must be defined"
 #endif
 
 /******************************************************************************
  * PUBLIC Macro
  ******************************************************************************/
 
-#define logd(fmt, ...)                                                         \
-    log_msg(LOG_AINSI_BLUE LOG_TAG fmt LOG_AINSI_RESET LOG_NEWLINE,            \
-            ##__VA_ARGS__)
-#define logi(fmt, ...)                                                         \
-    log_msg(LOG_AINSI_GREEN LOG_TAG fmt LOG_AINSI_RESET LOG_NEWLINE,           \
-            ##__VA_ARGS__)
-#define logw(fmt, ...)                                                         \
-    log_msg(LOG_AINSI_ORANGE LOG_TAG fmt LOG_AINSI_RESET LOG_NEWLINE,          \
-            ##__VA_ARGS__)
-#define loge(fmt, ...)                                                         \
-    log_msg(LOG_AINSI_RED LOG_TAG fmt LOG_AINSI_RESET LOG_NEWLINE,             \
-            ##__VA_ARGS__)
-
 /******************************************************************************
  * PUBLIC type definitions
  ******************************************************************************/
+typedef void (*task_init_t)(void);
+typedef void (*task_run_t)(void);
+typedef void (*task_it_t)(uint32_t period_ms);
 
 /******************************************************************************
  * PUBLIC constant data definitions
- ******************************************************************************/
+ ****************************************F**************************************/
 
 /******************************************************************************
  * PUBLIC variable definitions
@@ -73,12 +54,44 @@
  ******************************************************************************/
 
 /**
- * @brief Log a message.
- * Note that MACROs are available to log with different levels.
- *
- * @param fmt the format string
- * @param ... the arguments
+ * @brief Register a task
+ * @param name Name of the task
+ * @param init Initialization function
+ * @param run Run function
+ * @param it Interrupt function
  */
-void log_msg(const char *fmt, ...);
+void task_mngr_register_task(char *name,
+                             task_init_t init,
+                             task_run_t run,
+                             task_it_t it);
 
-#endif /* __LOG_H__ */
+/**
+ * @brief Initialize the tasks
+  * call this function once after registering all the tasks
+ */
+void task_mngr_init(void);
+
+/**
+ * @brief Call the tasks in the main loop
+ * call this function in an infinite loop
+ */
+void task_mngr_main(void);
+
+/**
+ * @brief Call the tasks periodically
+ * call this function in an interrupt
+ * @param period_ms Period in ms at which the tasks are called
+ */
+void task_mngr_it(int period_ms);
+
+/**
+ * @brief Print the information of the tasks
+ */
+void print_task_info(void);
+
+/**
+ * @brief Get the time in us
+ */
+uint32_t TASK_MNGR_GET_TIME_US_FUNC(void);
+
+#endif /* __TASK_MNGR_H__ */

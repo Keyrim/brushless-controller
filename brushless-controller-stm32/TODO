@@ -1,3 +1,2 @@
-- lib fifo si ça existe ?
-- lib uart qui utilise les fifo
-- bsp uart
+- faire fonctionner le printf
+- module log avec log info warning error etc en couleur

@@ -5,8 +5,8 @@
  */
 
 /* Protection against multiple inclusions */
-#ifndef __CONFIG_LIB_H__
-#   define __CONFIG_LIB_H__ __FILE__
+#ifndef __LIB_CONFIG_H__
+#define __LIB_CONFIG_H__ __FILE__
 
 /******************************************************************************
  * Includes
@@ -19,6 +19,7 @@
 /******************************************************************************
  * PUBLIC Macro
  ******************************************************************************/
+#define TASK_MNGR_GET_TIME_US_FUNC bsp_get_time_us
 
 /******************************************************************************
  * PUBLIC type definitions
@@ -40,4 +41,4 @@
  * PUBLIC function prototypes
  ******************************************************************************/
 
-#endif /* __CONFIG_LIB_H__ */
+#endif /* __LIB_CONFIG_H__ */

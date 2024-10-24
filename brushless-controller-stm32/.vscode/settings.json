@@ -4,5 +4,8 @@
     },
     "clangd.arguments": [
         "--compile-commands-dir=build/Debug"
+    ],
+    "editor.rulers": [
+        80
     ]
 }
