@@ -10,6 +10,8 @@ set(SRCS_FILES
     ${CORE_DIR}/Src/main.c
     ${CORE_DIR}/Src/gpio.c
     ${CORE_DIR}/Src/usart.c
+    ${CORE_DIR}/Src/adc.c
+    ${CORE_DIR}/Src/tim.c
     ${CORE_DIR}/Src/dma.c
     ${CORE_DIR}/Src/stm32f3xx_hal_msp.c
     ${CORE_DIR}/Src/stm32f3xx_it.c

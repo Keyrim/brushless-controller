@@ -13,6 +13,8 @@ set(INCLUDE_PATH_DIRS
 set(SRCS_FILES
     ${SRCS_FILES}
     ${DRIVERS_DIR}/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c
+    ${DRIVERS_DIR}/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc_ex.c
+    ${DRIVERS_DIR}/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.c
     ${DRIVERS_DIR}/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_exti.c
     ${DRIVERS_DIR}/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.c
     ${DRIVERS_DIR}/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr.c
