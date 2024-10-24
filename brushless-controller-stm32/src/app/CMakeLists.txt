@@ -7,7 +7,7 @@ set(INCLUDE_PATH_DIRS
 
 set(SRCS_FILES
     ${SRCS_FILES}
-    ${APP_DIR}/app_main.c
+    ${APP_DIR}/app.c
 )
 
 

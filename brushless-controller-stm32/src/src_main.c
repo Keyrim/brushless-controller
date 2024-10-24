@@ -10,7 +10,7 @@
 #include <stddef.h>
 
 #include "src_main.h"
-#include "app_main.h"
+#include "app.h"
 #include "bsp.h"
 
 #include "task_mngr.h"
@@ -56,7 +56,7 @@ static void src_init(void) {
     bsp_init();
 
     /* Register all the tasks */
-    task_mngr_register_task("app", app_main_init, app_main_loop, NULL);
+    task_mngr_register_task("app", app_init, app_loop, NULL);
 
     /* Initialize the tasks */
     task_mngr_init();
