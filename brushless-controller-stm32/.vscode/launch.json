@@ -15,7 +15,10 @@
             "interface": "swd",
             "serialNumber": "",                 //Set ST-Link ID if you use multiple at the same time
             // "runToEntryPoint": "main",
-
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
             "svdFile": "STM32F302.svd",      //Path to SVD file to see registers
             "v1": false,
             "showDevDebugOutput": "both",

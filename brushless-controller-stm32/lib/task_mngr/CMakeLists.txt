@@ -1,13 +1,13 @@
-set(TASK_MNGR ${CMAKE_CURRENT_LIST_DIR})
+set(TASK_MNGR_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 set(INCLUDE_PATH_DIRS
     ${INCLUDE_PATH_DIRS}
-    ${TASK_MNGR}
+    ${TASK_MNGR_DIR}
 )
 
 set(SRCS_FILES
     ${SRCS_FILES}
-    ${TASK_MNGR}/task_mngr.c
+    ${TASK_MNGR_DIR}/task_mngr.c
 )
 
 

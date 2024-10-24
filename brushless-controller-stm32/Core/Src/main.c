@@ -20,14 +20,13 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "src_main.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "bsp.h"
-#include "app_main.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,11 +100,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  bsp_init();
-  app_main_init();
+  src_main(); // This blocks the program forever
   while (1)
   {
-    app_main_loop();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

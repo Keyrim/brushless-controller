@@ -42,13 +42,11 @@ set(INCLUDE_PATH_DIRS
     ${PROJ_CONFIG_PATH}
 )
 
-include (${PROJ_PATH}/lib/common/CMakeLists.txt)
-include (${PROJ_PATH}/lib/log/CMakeLists.txt)
-include (${PROJ_PATH}/lib/task_mngr/CMakeLists.txt)
+
+include (${PROJ_PATH}/lib/CMakeLists.txt)
+include (${PROJ_PATH}/src/CMakeLists.txt)
 include (${PROJ_PATH}/Drivers/CMakeLists.txt)
 include (${PROJ_PATH}/Core/CMakeLists.txt)
-include (${PROJ_PATH}/app/CMakeLists.txt)
-include (${PROJ_PATH}/bsp/CMakeLists.txt)
 #
 # Symbols definition
 #
