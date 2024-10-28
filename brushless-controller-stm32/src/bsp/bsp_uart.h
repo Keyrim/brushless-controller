@@ -25,7 +25,7 @@
 /******************************************************************************
  * PUBLIC type definitions
  ******************************************************************************/
-#define LEN_BUFFER 512
+#define LEN_BUFFER (2048)
 
 /**
  * @brief transmission state enumeration definition
