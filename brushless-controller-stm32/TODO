@@ -1,2 +1,5 @@
-- faire fonctionner le printf
-- module log avec log info warning error etc en couleur
+- bsp pour le driver L6230
+    - vérifier et configurer la fréquence du timer avec les pwm:
+    - set_en1(%)
+    - set_en2(%)
+    - set_en3(%)
