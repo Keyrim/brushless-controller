@@ -10,9 +10,11 @@ ColumnLimit: 80
 ReflowComments: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowAllArgumentsOnNextLine: false
+AlignAfterOpenBracket: AlwaysBreak
 BinPackParameters: false
 BinPackArguments: false
-AllowShortFunctionsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AlignConsecutiveMacros: true
 AlignConsecutiveAssignments:
   Enabled: true
   AcrossEmptyLines: true

@@ -71,8 +71,6 @@ void Error_Handler(void);
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
-#define DIAG_EN_Pin GPIO_PIN_6
-#define DIAG_EN_GPIO_Port GPIOA
 #define BEMF3_Pin GPIO_PIN_7
 #define BEMF3_GPIO_Port GPIOA
 #define BEMF2_Pin GPIO_PIN_0

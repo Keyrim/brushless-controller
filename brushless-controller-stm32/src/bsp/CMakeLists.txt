@@ -10,6 +10,7 @@ set(SRCS_FILES
     ${BSP_DIR}/bsp.c
     ${BSP_DIR}/bsp_uart.c
     ${BSP_DIR}/bsp_adc.c
+    ${BSP_DIR}/bsp_motor.c
 )
 
 

@@ -84,6 +84,7 @@ void bsp_adc_it_us_cb(void) {
     HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_conv, BSP_ADC_CHANN_MAX);
 
     if ((adc_conv[0] < ADC_RECORD_TRIGGER_THRESHOLD) && adc_can_record) {
+        adc_can_record   = false;
         adc_is_recording = true;
     }
 
@@ -107,21 +108,23 @@ void bsp_adc_print_stored_conv(void) {
  * PUBLIC function
  ******************************************************************************/
 
-void bsp_adc_test(void) {
-
-    logi("ADC test\n");
-
+void bsp_adc_init(void) {
     HAL_TIM_Base_Init(&htim2);
     HAL_TIM_Base_Start_IT(&htim2);
+}
 
-    for (;;) {
-        if (!adc_is_recording && adc_nb_stored_conv > 0) {
-            bsp_adc_print_stored_conv();
-            HAL_Delay(2000);
-            logw("Restarting the recording");
-            adc_nb_stored_conv = 0;
-            adc_stored_conv[0] = ADC_RECORD_TRIGGER_THRESHOLD;
-            adc_can_record     = true;
-        }
+/**
+ * @brief Main loop of the bsp adc module
+ */
+void bsp_adc_loop(void) {
+    return;
+    if (adc_is_recording || adc_nb_stored_conv == 0) {
+        return;
     }
+
+    bsp_adc_print_stored_conv();
+    logw("Ready to record");
+    adc_nb_stored_conv = 0;
+    adc_stored_conv[0] = ADC_RECORD_TRIGGER_THRESHOLD;
+    adc_can_record     = true;
 }

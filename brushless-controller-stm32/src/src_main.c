@@ -9,12 +9,12 @@
  ******************************************************************************/
 #include <stddef.h>
 
-#include "src_main.h"
 #include "app.h"
 #include "bsp.h"
+#include "bsp/bsp_motor.h"
 #include "bsp_adc.h"
+#include "src_main.h"
 #include "task_mngr.h"
-
 
 /******************************************************************************
  * PRIVATE Configuration
@@ -56,6 +56,8 @@ static void src_init(void) {
     bsp_init();
 
     /* Register all the tasks */
+    task_mngr_register_task("bsp_adc", bsp_adc_init, bsp_adc_loop, NULL);
+    task_mngr_register_task("bsp_motor", bsp_motor_init, NULL, NULL);
     task_mngr_register_task("app", app_init, app_loop, NULL);
 
     /* Initialize the tasks */
@@ -77,8 +79,6 @@ static void src_loop(void) {
 
 void src_main(void) {
     src_init();
-    // TODO(tmagne): remove this
-    bsp_adc_test();
     for (;;) {
         src_loop();
     }

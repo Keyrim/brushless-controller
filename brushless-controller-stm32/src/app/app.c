@@ -11,7 +11,10 @@
 
 #include <stdint.h>
 
+#include "main.h"
+#include "stm32f3xx_hal_gpio.h"
 #include "log.h"
+#include "bsp_motor.h"
 
 #include "app.h"
 
@@ -64,11 +67,25 @@
  * @brief Initialize the main application
  */
 void app_init(void) {
-    logi("App initialized");
+    logi("App started");
 }
 
 /**
  * @brief Main application loop
  */
 void app_loop(void) {
+
+    if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET) {
+        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+        bsp_motor_set_pwm(999);
+        bsp_motor_step();
+        logi("Stepped");
+    } else {
+        bsp_motor_set_pwm(0);
+        bsp_motor_step();
+        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+    }
+
+
+    HAL_Delay(500);
 }
