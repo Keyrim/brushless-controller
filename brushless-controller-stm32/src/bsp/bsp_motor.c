@@ -7,9 +7,13 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
+
+#define TAG "bsp_motor"
+
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "log.h"
 #include "tim.h"
 
 #include "bsp_motor.h"
@@ -21,7 +25,12 @@
 #define BSP_MOTOR_TIM_CHANNEL_PHASE_A (TIM_CHANNEL_1)
 #define BSP_MOTOR_TIM_CHANNEL_PHASE_B (TIM_CHANNEL_2)
 #define BSP_MOTOR_TIM_CHANNEL_PHASE_C (TIM_CHANNEL_3)
+#define BSP_MOTOR_EN_GPIO_PORT        (GPIOC)
+#define BSP_MOTOR_EN1_GPIO_PIN        (GPIO_PIN_10)
+#define BSP_MOTOR_EN2_GPIO_PIN        (GPIO_PIN_11)
+#define BSP_MOTOR_EN3_GPIO_PIN        (GPIO_PIN_12)
 #define BSP_MOTOR_TIM_LOW_SPEED       (htim6)
+
 /******************************************************************************
  * PRIVATE Macro
  ******************************************************************************/
@@ -56,7 +65,15 @@ typedef enum {
 typedef struct {
     bool enabled;  /**< true if the phase is enabled, false otherwise */
     bool positive; /**< true if the phase is positive, false otherwise */
-} bsp_motor_phase_comutation_t;
+} bsp_motor_comm_t;
+
+typedef struct {
+    uint16_t en_pins;
+    uint16_t dis_pin;
+    bool chan1;
+    bool chan2;
+    bool chan3;
+} bsp_motor_com_t;
 
 /******************************************************************************
  * PRIVATE function prototypes
@@ -65,45 +82,56 @@ typedef struct {
 /******************************************************************************
  * PRIVATE constant data definitions
  ******************************************************************************/
-/* Step sequence for a 6-step motor */
-static const bsp_motor_phase_comutation_t
-    bsp_motor_step_sequence[BSP_MOTOR_STEP_COUNT][BSP_MOTOR_PHASE_COUNT] = {
-        /* Step 1 */
-        {
-            {.enabled = true, .positive = true},  /* Phase A */
-            {.enabled = true, .positive = false}, /* Phase B */
-            {.enabled = false},                   /* Phase C */
-        },
-        /* Step 2 */
-        {
-            {.enabled = true, .positive = true},  /* Phase A */
-            {.enabled = false},                   /* Phase B */
-            {.enabled = true, .positive = false}, /* Phase C */
-        },
-        /* Step 3 */
-        {
-            {.enabled = false},                   /* Phase A */
-            {.enabled = true, .positive = true},  /* Phase B */
-            {.enabled = true, .positive = false}, /* Phase C */
-        },
-        /* Step 4 */
-        {
-            {.enabled = true, .positive = false}, /* Phase A */
-            {.enabled = true, .positive = true},  /* Phase B */
-            {.enabled = false},                   /* Phase C */
-        },
-        /* Step 5 */
-        {
-            {.enabled = true, .positive = false}, /* Phase A */
-            {.enabled = false},                   /* Phase B */
-            {.enabled = true, .positive = true},  /* Phase C */
-        },
-        /* Step 6 */
-        {
-            {.enabled = false},                   /* Phase A */
-            {.enabled = true, .positive = false}, /* Phase B */
-            {.enabled = true, .positive = true},  /* Phase C */
-        },
+
+static const bsp_motor_com_t bsp_motor_com[BSP_MOTOR_STEP_COUNT] = {
+    /* Step 1 */
+    {
+        .en_pins = EN1_Pin | EN2_Pin,
+        .dis_pin = EN3_Pin,
+        .chan1   = true,
+        .chan2   = false,
+        .chan3   = false,
+    },
+    /* Step 2 */
+    {
+        .en_pins = EN1_Pin | EN3_Pin,
+        .dis_pin = EN2_Pin,
+        .chan1   = true,
+        .chan2   = false,
+        .chan3   = false,
+    },
+    /* Step 3 */
+    {
+        .en_pins = EN2_Pin | EN3_Pin,
+        .dis_pin = EN1_Pin,
+        .chan1   = false,
+        .chan2   = true,
+        .chan3   = false,
+    },
+    /* Step 4 */
+    {
+        .en_pins = EN2_Pin | EN1_Pin,
+        .dis_pin = EN3_Pin,
+        .chan1   = false,
+        .chan2   = true,
+        .chan3   = false,
+    },
+    /* Step 5 */
+    {
+        .en_pins = EN3_Pin | EN1_Pin,
+        .dis_pin = EN2_Pin,
+        .chan1   = false,
+        .chan2   = false,
+        .chan3   = true,
+    },
+    /* Step 6 */
+    {
+        .en_pins = EN3_Pin | EN2_Pin,
+        .dis_pin = EN1_Pin,
+        .chan1   = false,
+        .chan2   = false,
+        .chan3   = true,
+    },
 };
 
 /******************************************************************************
@@ -111,7 +139,7 @@ static const bsp_motor_phase_comutation_t
  ******************************************************************************/
 
 static volatile bsp_motor_step_t current_step = BSP_MOTOR_STEP_1;
-static volatile bsp_motor_pwm_t current_pwm   = 800; /* over 1000 */
+static volatile bsp_motor_pwm_t current_pwm   = 400; /* over 499 */
 static volatile bool is_forward               = true;
 
 /******************************************************************************
@@ -138,6 +166,7 @@ static inline void bsp_motor_update_pwm(
     bsp_motor_pwm_t pwma,
     bsp_motor_pwm_t pwmb,
     bsp_motor_pwm_t pwmc) {
+
     __HAL_TIM_SET_COMPARE(
         &BSP_MOTOR_TIM_PWM,
         BSP_MOTOR_TIM_CHANNEL_PHASE_A,
@@ -158,30 +187,16 @@ static inline void bsp_motor_set_phases(
     bool is_forward) {
 
     /* Get the current commutations infos */
-    const bsp_motor_phase_comutation_t *current_comms =
-        bsp_motor_step_sequence[step];
+    const bsp_motor_com_t *com = &bsp_motor_com[step];
 
-    /* Disable all phases */
-    HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, GPIO_PIN_RESET);
+    /* Disable the disabled phase */
+    BSP_MOTOR_EN_GPIO_PORT->BRR = com->dis_pin;
 
-    /* Set the phases */
-    if (current_comms[BSP_MOTOR_PHASE_A].enabled) {
-        HAL_GPIO_WritePin(EN1_GPIO_Port, EN1_Pin, GPIO_PIN_SET);
-    }
-    if (current_comms[BSP_MOTOR_PHASE_B].enabled) {
-        HAL_GPIO_WritePin(EN2_GPIO_Port, EN2_Pin, GPIO_PIN_SET);
-    }
-    if (current_comms[BSP_MOTOR_PHASE_C].enabled) {
-        HAL_GPIO_WritePin(EN3_GPIO_Port, EN3_Pin, GPIO_PIN_SET);
-    }
+    /* Set the enabled phases */
+    BSP_MOTOR_EN_GPIO_PORT->BSRR = com->en_pins;
 
     /* Set the PWM */
-    bsp_motor_pwm_t pwma = pwm * current_comms[BSP_MOTOR_PHASE_A].positive;
-    bsp_motor_pwm_t pwmb = pwm * current_comms[BSP_MOTOR_PHASE_B].positive;
-    bsp_motor_pwm_t pwmc = pwm * current_comms[BSP_MOTOR_PHASE_C].positive;
-    bsp_motor_update_pwm(pwma, pwmb, pwmc);
+    bsp_motor_update_pwm(pwm * com->chan1, pwm * com->chan2, pwm * com->chan3);
 }
 
 /******************************************************************************
@@ -207,6 +222,7 @@ void bsp_motor_enable(bool enable) {}
 void bsp_motor_step(void) {
     current_step = bsp_motor_get_next_step(current_step, is_forward);
     bsp_motor_set_phases(current_step, current_pwm, is_forward);
+    logi("Step %d", current_step);
 }
 
 void bsp_motor_set_pwm(uint16_t pwm) {

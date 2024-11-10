@@ -22,6 +22,9 @@
 /******************************************************************************
  * PRIVATE Configuration
  ******************************************************************************/
+#define APP_BASE_PERIOD 500
+#define APP_MIN_PERIOD 1
+#define APP_PERIOD_STEP 0.9f
 
 /******************************************************************************
  * PRIVATE Macro
@@ -42,6 +45,7 @@
 /******************************************************************************
  * PRIVATE variable definitions
  ******************************************************************************/
+static uint16_t app_period = APP_BASE_PERIOD;
 
 /******************************************************************************
  * PUBLIC implicit variable definitions (e.g. when no .h file)
@@ -76,16 +80,12 @@ void app_init(void) {
 void app_loop(void) {
 
     if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET) {
-        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-        bsp_motor_set_pwm(999);
+        float new_period = app_period * APP_PERIOD_STEP;
+        app_period = new_period > APP_MIN_PERIOD ? new_period : APP_MIN_PERIOD;
         bsp_motor_step();
-        logi("Stepped");
     } else {
-        bsp_motor_set_pwm(0);
-        bsp_motor_step();
-        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+        app_period = APP_BASE_PERIOD;
     }
 
-
-    HAL_Delay(500);
+    HAL_Delay(app_period);
 }
