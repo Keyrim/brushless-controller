@@ -71,7 +71,10 @@ static uint16_t app_period = APP_BASE_PERIOD;
  * @brief Initialize the main application
  */
 void app_init(void) {
-    logi("App started");
+    logi("Init ...");
+
+    bsp_motor_start();
+    logi("Motor started");
 }
 
 /**
@@ -82,7 +85,6 @@ void app_loop(void) {
     if(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_RESET) {
         float new_period = app_period * APP_PERIOD_STEP;
         app_period = new_period > APP_MIN_PERIOD ? new_period : APP_MIN_PERIOD;
-        bsp_motor_step();
     } else {
         app_period = APP_BASE_PERIOD;
     }

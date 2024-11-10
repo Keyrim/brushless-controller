@@ -56,7 +56,7 @@ static void src_init(void) {
     bsp_init();
 
     /* Register all the tasks */
-    task_mngr_register_task("bsp_adc", bsp_adc_init, bsp_adc_loop, NULL);
+    task_mngr_register_task("bsp_adc", bsp_adc_init, NULL, NULL);
     task_mngr_register_task("bsp_motor", bsp_motor_init, NULL, NULL);
     task_mngr_register_task("app", app_init, app_loop, NULL);
 

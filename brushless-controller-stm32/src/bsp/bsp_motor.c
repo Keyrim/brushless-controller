@@ -13,6 +13,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "stm32f3xx_hal.h"
+#include "stm32f3xx_hal_tim.h"
+#include "stm32f302x8.h"
+#include "bsp_adc.h"
 #include "log.h"
 #include "tim.h"
 
@@ -29,31 +33,37 @@
 #define BSP_MOTOR_EN1_GPIO_PIN        (GPIO_PIN_10)
 #define BSP_MOTOR_EN2_GPIO_PIN        (GPIO_PIN_11)
 #define BSP_MOTOR_EN3_GPIO_PIN        (GPIO_PIN_12)
-#define BSP_MOTOR_TIM_LOW_SPEED       (htim6)
 
 /******************************************************************************
  * PRIVATE Macro
  ******************************************************************************/
+#define BSP_MOTOR_SET_CCR(pwma, pwmb, pwmc)                                    \
+    do {                                                                       \
+        __HAL_TIM_SET_COMPARE(                                                 \
+            &BSP_MOTOR_TIM_PWM,                                                \
+            BSP_MOTOR_TIM_CHANNEL_PHASE_A,                                     \
+            (pwma));                                                           \
+        __HAL_TIM_SET_COMPARE(                                                 \
+            &BSP_MOTOR_TIM_PWM,                                                \
+            BSP_MOTOR_TIM_CHANNEL_PHASE_B,                                     \
+            (pwmb));                                                           \
+        __HAL_TIM_SET_COMPARE(                                                 \
+            &BSP_MOTOR_TIM_PWM,                                                \
+            BSP_MOTOR_TIM_CHANNEL_PHASE_C,                                     \
+            (pwmc));                                                           \
+    } while (0)
 
 /******************************************************************************
  * PRIVATE type definitions
  ******************************************************************************/
 
-/**
- * @brief A pwm value for the motor
- * @note the value must be between in [0, 1000[
- */
-typedef uint16_t bsp_motor_pwm_t;
-
-typedef enum {
-    BSP_MOTOR_STEP_1 = 0, /**< Step 1 */
-    BSP_MOTOR_STEP_2,     /**< Step 2 */
-    BSP_MOTOR_STEP_3,     /**< Step 3 */
-    BSP_MOTOR_STEP_4,     /**< Step 4 */
-    BSP_MOTOR_STEP_5,     /**< Step 5 */
-    BSP_MOTOR_STEP_6,     /**< Step 6 */
-    BSP_MOTOR_STEP_COUNT  /**< Number of steps */
-} bsp_motor_step_t;
+typedef struct {
+    uint16_t en_pins;
+    uint16_t dis_pin;
+    bool chan1;
+    bool chan2;
+    bool chan3;
+} bsp_motor_com_t;
 
 typedef enum {
     BSP_MOTOR_PHASE_A = 0, /**< Phase A */
@@ -67,67 +77,60 @@ typedef struct {
     bool positive; /**< true if the phase is positive, false otherwise */
 } bsp_motor_comm_t;
 
-typedef struct {
-    uint16_t en_pins;
-    uint16_t dis_pin;
-    bool chan1;
-    bool chan2;
-    bool chan3;
-} bsp_motor_com_t;
-
 /******************************************************************************
  * PRIVATE function prototypes
  ******************************************************************************/
-
+static void bsp_motor_update_phases(void);
+static void bsp_motor_timer_underflow(void);
+static void bsp_motor_timer_overflow(void);
 /******************************************************************************
  * PRIVATE constant data definitions
  ******************************************************************************/
-
 static const bsp_motor_com_t bsp_motor_com[BSP_MOTOR_STEP_COUNT] = {
     /* Step 1 */
     {
-        .en_pins = EN1_Pin | EN2_Pin,
-        .dis_pin = EN3_Pin,
+        .en_pins = BSP_MOTOR_EN1_GPIO_PIN | BSP_MOTOR_EN2_GPIO_PIN,
+        .dis_pin = BSP_MOTOR_EN3_GPIO_PIN,
         .chan1   = true,
         .chan2   = false,
         .chan3   = false,
     },
     /* Step 2 */
     {
-        .en_pins = EN1_Pin | EN3_Pin,
-        .dis_pin = EN2_Pin,
+        .en_pins = BSP_MOTOR_EN1_GPIO_PIN | BSP_MOTOR_EN3_GPIO_PIN,
+        .dis_pin = BSP_MOTOR_EN2_GPIO_PIN,
         .chan1   = true,
         .chan2   = false,
         .chan3   = false,
     },
     /* Step 3 */
     {
-        .en_pins = EN2_Pin | EN3_Pin,
-        .dis_pin = EN1_Pin,
+        .en_pins = BSP_MOTOR_EN2_GPIO_PIN | BSP_MOTOR_EN3_GPIO_PIN,
+        .dis_pin = BSP_MOTOR_EN1_GPIO_PIN,
         .chan1   = false,
         .chan2   = true,
         .chan3   = false,
     },
     /* Step 4 */
     {
-        .en_pins = EN2_Pin | EN1_Pin,
-        .dis_pin = EN3_Pin,
+        .en_pins = BSP_MOTOR_EN2_GPIO_PIN | BSP_MOTOR_EN1_GPIO_PIN,
+        .dis_pin = BSP_MOTOR_EN3_GPIO_PIN,
         .chan1   = false,
         .chan2   = true,
         .chan3   = false,
     },
     /* Step 5 */
     {
-        .en_pins = EN3_Pin | EN1_Pin,
-        .dis_pin = EN2_Pin,
+        .en_pins = BSP_MOTOR_EN3_GPIO_PIN | BSP_MOTOR_EN1_GPIO_PIN,
+        .dis_pin = BSP_MOTOR_EN2_GPIO_PIN,
         .chan1   = false,
         .chan2   = false,
         .chan3   = true,
     },
     /* Step 6 */
     {
-        .en_pins = EN3_Pin | EN2_Pin,
-        .dis_pin = EN1_Pin,
+        .en_pins = BSP_MOTOR_EN3_GPIO_PIN | BSP_MOTOR_EN2_GPIO_PIN,
+        .dis_pin = BSP_MOTOR_EN1_GPIO_PIN,
         .chan1   = false,
         .chan2   = false,
         .chan3   = true,
@@ -137,10 +140,10 @@ static const bsp_motor_com_t bsp_motor_com[BSP_MOTOR_STEP_COUNT] = {
 /******************************************************************************
  * PRIVATE variable definitions
  ******************************************************************************/
-
-static volatile bsp_motor_step_t current_step = BSP_MOTOR_STEP_1;
-static volatile bsp_motor_pwm_t current_pwm   = 400; /* over 499 */
-static volatile bool is_forward               = true;
+static volatile bsp_motor_pwm_t bsp_motor_current_pwm   = 0;
+static volatile bsp_motor_step_t bsp_motor_current_step = 0;
+static uint16_t bsp_motor_meas_current[6]               = {0};
+static uint16_t bsp_motor_meas_bemf[6]                  = {0};
 
 /******************************************************************************
  * PUBLIC implicit variable definitions (e.g. when no .h file)
@@ -153,41 +156,9 @@ static volatile bool is_forward               = true;
 /******************************************************************************
  * PRIVATE function
  ******************************************************************************/
+void bsp_motor_update_phases(void) {
 
-static inline bsp_motor_step_t
-bsp_motor_get_next_step(bsp_motor_step_t current_step, bool is_forward) {
-    if (is_forward) {
-        return (current_step + 1) % BSP_MOTOR_STEP_COUNT;
-    }
-    return (current_step + BSP_MOTOR_STEP_COUNT - 1) % BSP_MOTOR_STEP_COUNT;
-}
-
-static inline void bsp_motor_update_pwm(
-    bsp_motor_pwm_t pwma,
-    bsp_motor_pwm_t pwmb,
-    bsp_motor_pwm_t pwmc) {
-
-    __HAL_TIM_SET_COMPARE(
-        &BSP_MOTOR_TIM_PWM,
-        BSP_MOTOR_TIM_CHANNEL_PHASE_A,
-        pwma);
-    __HAL_TIM_SET_COMPARE(
-        &BSP_MOTOR_TIM_PWM,
-        BSP_MOTOR_TIM_CHANNEL_PHASE_B,
-        pwmb);
-    __HAL_TIM_SET_COMPARE(
-        &BSP_MOTOR_TIM_PWM,
-        BSP_MOTOR_TIM_CHANNEL_PHASE_C,
-        pwmc);
-}
-
-static inline void bsp_motor_set_phases(
-    bsp_motor_step_t step,
-    bsp_motor_pwm_t pwm,
-    bool is_forward) {
-
-    /* Get the current commutations infos */
-    const bsp_motor_com_t *com = &bsp_motor_com[step];
+    const bsp_motor_com_t *com = &bsp_motor_com[bsp_motor_current_step];
 
     /* Disable the disabled phase */
     BSP_MOTOR_EN_GPIO_PORT->BRR = com->dis_pin;
@@ -196,37 +167,69 @@ static inline void bsp_motor_set_phases(
     BSP_MOTOR_EN_GPIO_PORT->BSRR = com->en_pins;
 
     /* Set the PWM */
-    bsp_motor_update_pwm(pwm * com->chan1, pwm * com->chan2, pwm * com->chan3);
+    bsp_motor_pwm_t pwm1 = bsp_motor_current_pwm * com->chan1;
+    bsp_motor_pwm_t pwm2 = bsp_motor_current_pwm * com->chan2;
+    bsp_motor_pwm_t pwm3 = bsp_motor_current_pwm * com->chan3;
+    BSP_MOTOR_SET_CCR(pwm1, pwm2, pwm3);
+}
+
+void bsp_motor_timer_underflow(void) {
+    /* TODO */
+    bsp_adc_start_recording(bsp_motor_meas_bemf);
+}
+
+void bsp_motor_timer_overflow(void) {
+    /* TODO */
+    bsp_adc_start_recording(bsp_motor_meas_current);
 }
 
 /******************************************************************************
  * PUBLIC Callback function
  ******************************************************************************/
+void bsp_motor_timer_update_event_cb(void) {
 
+    // Check the direction. The logic is inverted because the timer changes
+    // the direction bit before we can read it after the update event.
+    // If we read that we are counting up, it means that we have underflowed and
+    // that we are NOW counting up but we were counting down before.
+    if (TIM1->CR1 & TIM_CR1_DIR) {
+        // Overflow event
+        bsp_motor_timer_overflow();
+    } else {
+        // Underflow event
+        bsp_motor_timer_underflow();
+    }
+}
 /******************************************************************************
  * PUBLIC function
  ******************************************************************************/
 
 void bsp_motor_init(void) {
+    /* Set the PWM to 0 */
+    bsp_motor_current_pwm = 100;
+    bsp_motor_update_phases();
+}
+
+void bsp_motor_start(void) {
     /* Start the PWM timer */
-    bsp_motor_set_phases(current_step, current_pwm, is_forward);
+    HAL_TIM_Base_Start_IT(&BSP_MOTOR_TIM_PWM);
     HAL_TIM_PWM_Start(&BSP_MOTOR_TIM_PWM, BSP_MOTOR_TIM_CHANNEL_PHASE_A);
     HAL_TIM_PWM_Start(&BSP_MOTOR_TIM_PWM, BSP_MOTOR_TIM_CHANNEL_PHASE_B);
     HAL_TIM_PWM_Start(&BSP_MOTOR_TIM_PWM, BSP_MOTOR_TIM_CHANNEL_PHASE_C);
-
-    // HAL_TIM_Base_Start(&BSP_MOTOR_TIM_LOW_SPEED);
 }
 
-void bsp_motor_enable(bool enable) {}
-
-void bsp_motor_step(void) {
-    current_step = bsp_motor_get_next_step(current_step, is_forward);
-    bsp_motor_set_phases(current_step, current_pwm, is_forward);
-    logi("Step %d", current_step);
+void bsp_motor_stop(void) {
+    /* Stop the PWM timer */
+    HAL_TIM_PWM_Stop(&BSP_MOTOR_TIM_PWM, BSP_MOTOR_TIM_CHANNEL_PHASE_A);
+    HAL_TIM_PWM_Stop(&BSP_MOTOR_TIM_PWM, BSP_MOTOR_TIM_CHANNEL_PHASE_B);
+    HAL_TIM_PWM_Stop(&BSP_MOTOR_TIM_PWM, BSP_MOTOR_TIM_CHANNEL_PHASE_C);
+    HAL_TIM_Base_Stop_IT(&BSP_MOTOR_TIM_PWM);
 }
 
-void bsp_motor_set_pwm(uint16_t pwm) {
-    current_pwm = pwm;
+void bsp_motor_set_pwm(bsp_motor_pwm_t pwm) {
+    bsp_motor_current_pwm = pwm;
 }
 
-void bsp_motor_set_direction(bool is_forward) {}
+void bsp_motor_set_step(bsp_motor_step_t step) {
+    bsp_motor_current_step = step;
+}

@@ -15,6 +15,7 @@ BinPackParameters: false
 BinPackArguments: false
 AllowShortFunctionsOnASingleLine: Empty
 AlignConsecutiveMacros: true
+SortIncludes: false
 AlignConsecutiveAssignments:
   Enabled: true
   AcrossEmptyLines: true

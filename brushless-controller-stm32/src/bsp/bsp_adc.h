@@ -17,16 +17,6 @@
 /******************************************************************************
  * PUBLIC Configuration
  ******************************************************************************/
-/* Maximum number of scanned values (if u have N channels, u'll have
- * BSP_ADC_MAX_STORED_VALUES * N values stored) */
-#ifndef BSP_ADC_MAX_STORED_VALUES
-#define BSP_ADC_MAX_STORED_VALUES 8
-#endif
-
-/* Default sampling period in us */
-#ifndef BSP_ADC_DEFAULT_SAMPLING_PERIOD_US
-#define BSP_ADC_DEFAULT_SAMPLING_PERIOD_US 1000
-#endif
 
 /******************************************************************************
  * PUBLIC Macro
@@ -56,28 +46,21 @@ typedef enum {
 /******************************************************************************
  * PUBLIC Callback function
  ******************************************************************************/
-/**
- * @brief Called periodically when a new ADC conversion should be done
- */
-void bsp_adc_it_us_cb(void);
 
 /******************************************************************************
  * PUBLIC function prototypes
  ******************************************************************************/
 
 /**
- * @brief Init the bsp adc module
+ * @brief Iinitializes the ADC
+ * It actually does nothing for the moment but ^^
  */
 void bsp_adc_init(void);
 
 /**
- * @brief Main loop of the bsp adc module
- */
-void bsp_adc_loop(void);
-
-/**
  * @brief Start the recording of the ADC values
  * @param[in] out pointer to the buffer where the values will be stored
+ * note the buffer must be big enough to store BSP_ADC_CHANN_MAX values
  */
 void bsp_adc_start_recording(uint16_t *out);
 
